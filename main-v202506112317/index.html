@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扎西红色小镇3D导览通</title>
+    <!-- 引入外部CSS文件 -->
+    <link rel="stylesheet" href="style.css">
+    <!-- 引入Cesium库 -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.104/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.104/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <!-- 引入高德地图API -->
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=9a418d1b1fbd093a8064a48cc36ea57e"></script>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- 顶部导航栏 -->
+    <div id="topBar">
+        <div id="topBarContainer">
+            <button id="navBtn"><i class="fas fa-route"></i> 路线规划</button>
+
+            <div id="searchContainer">
+                <input type="text" id="searchInput" placeholder="搜索景点名称...">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+                <div id="searchResults"></div>
+            </div>
+
+            <button id="weatherBtn"><i class="fas fa-cloud-sun"></i> 天气模拟</button>
+            <button id="officialBtn"><i class="fas fa-globe"></i> 官网地址</button>
+            <button id="researchBtn"><i class="fas fa-flask"></i> 科研项目</button>
+            <button id="githubBtn"><i class="fab fa-github"></i> GitHub源码</button>
+            <button id="aboutBtn"><i class="fas fa-info-circle"></i> 关于开发者</button>
+        </div>
+    </div>
+
+    <div id="compass" class="compass">
+        <div class="compass-rose">
+            <div class="compass-n">N</div>
+            <div class="compass-e">E</div>
+            <div class="compass-s">S</div>
+            <div class="compass-w">W</div>
+            <i class="fas fa-compass"></i>
+        </div>
+    </div>
+
+    <!-- 信息弹窗 -->
+    <div id="infoWindow" class="info-window">
+        <span class="close-btn" id="closeInfoBtn">×</span>
+        <h3 id="modelTitle">模型信息</h3>
+        <p><strong>ID:</strong> <span id="modelId">-</span></p>
+        <p><strong>位置:</strong> <span id="modelPosition">-</span></p>
+        <p><strong>上传时间:</strong> <span id="modelUploadTime">-</span></p>
+        <p><strong>描述:</strong> <span id="modelDescription">-</span></p>
+        <button id="navigateToBtn"><i class="fas fa-directions"></i> 导航至此</button>
+    </div>
+
+    <!-- 天气信息弹窗 -->
+    <div id="weatherWindow" class="info-window">
+        <span class="close-btn" id="closeWeatherBtn">×</span>
+        <h3 id="weatherTitle">威信县天气状况</h3>
+        <p><strong>天气:</strong> <span id="weatherCondition">-</span></p>
+        <p><strong>温度:</strong> <span id="weatherTemperature">-</span>°C</p>
+        <p><strong>湿度:</strong> <span id="weatherHumidity">-</span>%</p>
+        <p><strong>风向:</strong> <span id="weatherWindDirection">-</span></p>
+        <p><strong>风力:</strong> <span id="weatherWindPower">-</span>级</p>
+        <p><strong>更新时间:</strong> <span id="weatherReportTime">-</span></p>
+    </div>
+
+    替换原有的navigationPanel部分
+    <div id="navigationPanel">
+        <h3><i class="fas fa-route"></i> 路径规划</h3>
+        <p>起点:</p>
+        <select id="start-select" title="请选择起点">
+            <option value="">请选择起点</option>
+            <option value="105.04479,27.84965">扎西红军烈士陵园</option>
+            <option value="105.0446,27.8486">红军广场</option>
+            <option value="105.04471,27.85045">纪念碑</option>
+            <option value="105.04582,27.85068">狮子营红军战斗遗址</option>
+            <option value="105.04675,27.8508">纪念馆</option>
+            <option value="105.04479,27.8493">红军井</option>
+            <option value="105.04666,27.8492">扎西老街</option>
+            <option value="105.04598,27.84948">扎西宾馆</option>
+            <option value="105.04513,27.85086">八角楼</option>
+            <option value="105.0471,27.8499">扎西客栈</option>
+            <option value="105.0479,27.8502">云上乡愁书院</option>
+            <option value="105.0472,27.8498">彝秀馆</option>
+            <option value="105.0484,27.8498">苗族服饰馆</option>
+            <option value="105.04798,27.8499">龙井</option>
+            <option value="105.0464,27.85001">扎西食堂</option>
+            <option value="105.04569,27.8499">威信人民政府</option>
+            <option value="105.04858,27.85102">扎西会议旧址</option>
+        </select>
+        <p>终点:</p>
+        <select id="end-select" title="请选择终点">
+            <option value="">请选择终点</option>
+            <option value="105.04479,27.84965">扎西红军烈士陵园</option>
+            <option value="105.0446,27.8486">红军广场</option>
+            <option value="105.04471,27.85045">纪念碑</option>
+            <option value="105.04582,27.85068">狮子营红军战斗遗址</option>
+            <option value="105.04675,27.8508">纪念馆</option>
+            <option value="105.04479,27.8493">红军井</option>
+            <option value="105.04666,27.8492">扎西老街</option>
+            <option value="105.04598,27.84948">扎西宾馆</option>
+            <option value="105.04513,27.85086">八角楼</option>
+            <option value="105.0471,27.8499">扎西客栈</option>
+            <option value="105.0479,27.8502">云上乡愁书院</option>
+            <option value="105.0472,27.8498">彝秀馆</option>
+            <option value="105.0484,27.8498">苗族服饰馆</option>
+            <option value="105.04798,27.8499">龙井</option>
+            <option value="105.0464,27.85001">扎西食堂</option>
+            <option value="105.04569,27.8499">威信人民政府</option>
+            <option value="105.04858,27.85102">扎西会议旧址</option>
+        </select>
+        <button id="planRouteBtn"><i class="fas fa-route"></i> 规划路线</button>
+        <button id="startNavBtn" disabled><i class="fas fa-play"></i> 开始导览</button>
+        <div id="routeResult"></div>
+    </div>
+
+    <!-- Cesium容器 -->
+    <div id="cesiumContainer"></div>
+
+    <!-- 在body标签内添加以下代码（建议放在cesiumContainer之后） -->
+    <div id="toolPanel">
+        <!-- 左侧箭头按钮 -->
+        <div id="toggleToolBtn" class="tool-toggle-btn">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+        <!-- 竖排工具栏 -->
+        <div id="toolBar" class="tool-bar">
+            <!-- 7个圆形功能按钮 -->
+            <div class="tool-btn" title="查看经纬度" data-tool="coordinate">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="tool-btn" title="绘制直线" data-tool="line">
+                <i class="fas fa-minus"></i>
+            </div>
+            <div class="tool-btn" title="绘制矩形" data-tool="rectangle">
+                <i class="fas fa-vector-square"></i>
+            </div>
+            <div class="tool-btn" title="绘制圆形" data-tool="circle">
+                <i class="fas fa-circle"></i>
+            </div>
+            <div class="tool-btn" title="绘制多边形" data-tool="polygon">
+                <i class="fas fa-draw-polygon"></i>
+            </div>
+            <div class="tool-btn" title="绘制缓冲区" data-tool="buffer">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="tool-btn" title="删除所有图形" data-tool="clear">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 坐标信息弹窗 -->
+    <div id="coordinateInfo" class="tool-popup">
+        <div class="tool-popup-header">
+            <span>坐标信息</span>
+            <span class="close-popup">&times;</span>
+        </div>
+        <div class="tool-popup-content">
+            <p><strong>经度:</strong> <span id="longitudeValue">-</span></p>
+            <p><strong>纬度:</strong> <span id="latitudeValue">-</span></p>
+            <p><strong>海拔:</strong> <span id="heightValue">-</span> 米</p>
+        </div>
+    </div>
+
+    <!-- 缓冲区设置弹窗 -->
+    <div id="bufferPopup" class="tool-popup">
+        <div class="tool-popup-header">
+            <span>缓冲区设置</span>
+            <span class="close-popup">&times;</span>
+        </div>
+        <div class="tool-popup-content">
+            <label for="bufferRadius">半径 (km):</label>
+            <input type="number" id="bufferRadius" min="0.1" step="0.1" value="1">
+            <button id="confirmBuffer">确认</button>
+        </div>
+    </div>
+
+    <!-- 右键删除菜单 -->
+    <div id="contextMenu" class="tool-popup">
+        <div class="tool-popup-content">
+            <button id="deleteEntity">删除图形</button>
+        </div>
+    </div>
+
+    <!-- 动态比例尺容器 -->
+    <div id="dynamicScaleBar" class="scale-container">
+        <div class="scale-line"></div>
+        <div class="scale-label">0 km</div>
+    </div>
+
+    <!-- 底部版权信息 -->
+    <div id="footer">
+        &copy; 2025 云南师范大学地理学部 |
+        开发团队: Error Chtholly (Zetong Zhou), Siyi Shen*, Putong Li, Linyan Chen, Ying Yang, Zhongxian Xiang |
+        本项目受云南师范大学本科生科研训练基金项目支持（项目编号：KX2024111, 项目负责人：周泽同）
+    </div>
+
+    <!-- 引入外部JavaScript文件 -->
+    <script src="script.js"></script>
+</body>
+
+</html>
